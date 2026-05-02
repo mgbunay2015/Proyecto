@@ -13,11 +13,13 @@ const userSchema = new mongoose.Schema({
         required: true 
     },
     email: { 
-        type: String, 
-        required: true,
-        lowercase: true,
-        trim: true
+    type: String, 
+    required: [true, 'El correo electrónico es obligatorio'],
+    lowercase: true,
+    trim: true,
+    match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Por favor ingresa un correo electrónico válido.']
     },
+
     createdAt: { 
         type: Date, 
         default: Date.now 

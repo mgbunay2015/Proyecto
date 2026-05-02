@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis Financiero - Cooperativas</title>
+    <!-- Librería para PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --accent: #ff6b6b;
+            --success: #28a745;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .header h1 { color: var(--secondary); }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        /* Tabs Navigation */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        .tab-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            background: #e0e0e0;
+            color: #666;
+        }
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Forms */
+        .form-section { display: none; animation: fadeIn 0.5s; }
+        .form-section.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .form-group input:focus { border-color: var(--primary); outline: none; }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        
+        .btn-create { background: linear-gradient(135deg, var(--primary), var(--secondary)); }
+        .btn-search { background: linear-gradient(135deg, #11998e, #38ef7d); }
+        .btn-pdf { background: linear-gradient(135deg, #ff416c, #ff4b2b); margin-top: 20px; display: none; }
+        .btn-pdf.show { display: block; }
+
+        /* Results */
+        .results-container { display: none; }
+        .results-container.show { display: block; animation: slideUp 0.5s; }
+        
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .user-info {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+        .info-item { background: rgba(255,255,255,0.2); padding: 10px; border-radius: 8px; }
+        .info-label { font-size: 0.8em; opacity: 0.9; }
+        .info-value { font-weight: bold; font-size: 1.1em; }
+
+        /* Table */
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: var(--secondary); color: white; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
+        tr:hover { background: #f8f9fa; }
+
+        .rank-1 { background-color: #ffd700 !important; font-weight: bold; }
+        .rank-2 { background-color: #c0c0c0 !important; }
+        .rank-3 { background-color: #cd7f32 !important; color: white; }
+
+        .badge { padding: 4px 10px; border-radius: 15px; background: var(--primary); color: white; font-size: 0.9em; }
+
+        /* Indicators */
+        .toggle-btn {
+            background: #f0f0f0; border: none; padding: 6px 12px;
+            border-radius: 5px; cursor: pointer; font-size: 0.85em;
+        }
+        .indicators-panel {
+            display: none; background: #f8f9fa; padding: 15px;
+            margin-top: 10px; border-radius: 8px; border-left: 4px solid var(--primary);
+        }
+        .indicators-panel.show { display: block; }
+        .indicator-box { margin-bottom: 10px; background: white; padding: 10px; border-radius: 5px; }
+        .formula { font-family: monospace; background: #eee; padding: 5px; border-radius: 3px; font-size: 0.9em; word-break: break-all; }
+
+        .alert {
+            padding: 15px; border-radius: 8px; margin-bottom: 15px; display: none;
+        }
+        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🏦 Análisis Financiero de Cooperativas</h1>
+        <p>Sistema inteligente de evaluación de inversiones</p>
+    </div>
+
+    <div class="card">
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('nuevo')">📊 Realizar Nuevo Análisis</button>
+            <button class="tab-btn" onclick="switchTab('consultar')">🔍 Consultar Historial</button>
+        </div>
+
+        <div id="alert" class="alert"></div>
+
+        <!-- FORMULARIO 1: NUEVO ANÁLISIS (3 DATOS) -->
+        <div id="tab-nuevo" class="form-section active">
+            <h2 style="margin-bottom: 15px;">Datos del Inversionista</h2>
+            <form id="formNuevo">
+                <div class="form-group">
+                    <label>Cédula de Identidad *</label>
+                    <input type="text" id="cedula_new" required placeholder="Ej: 1714970926" maxlength="10">
+                </div>
+                <div class="form-group">
+                    <label>Nombre Completo *</label>
+                    <input type="text" id="nombre_new" required placeholder="Ej: MANUEL BUNAY">
+                </div>
+                <div class="form-group">
+                    <label>Monto de Inversión (USD) *</label>
+                    <input type="number" id="monto_new" required placeholder="Ej: 500" min="1">
+                </div>
+                <button type="submit" class="btn btn-create">🚀 Calcular Análisis</button>
+            </form>
+        </div>
+
+        <!-- FORMULARIO 2: CONSULTAR (1 DATO) -->
+        <div id="tab-consultar" class="form-section">
+            <h2 style="margin-bottom: 15px;">Consultar por Cédula</h2>
+            <form id="formConsulta">
+                <div class="form-group">
+                    <label>Cédula de Identidad *</label>
+                    <input type="text" id="cedula_consulta" required placeholder="Ingrese su cédula" maxlength="10">
+                </div>
+                <button type="submit" class="btn btn-search">🔍 Buscar Historial</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- RESULTADOS -->
+    <div class="card results-container" id="resultados">
+        <div class="user-info" id="user-display"></div>
+        
+        <div class="table-wrapper">
+            <table id="ranking-table">
+                <thead>
+                    <tr>
+                        <th>Ranking</th>
+                        <th>RUC</th>
+                        <th>Cooperativa</th>
+                        <th>Segmento</th>
+                        <th>Score</th>
+                        <th>Detalle</th>
+                    </tr>
+                </thead>
+                <tbody id="ranking-body"></tbody>
+            </table>
+        </div>
+
+        <button id="btn-pdf" class="btn btn-pdf" onclick="downloadPDF()">📄 Descargar Reporte PDF</button>
+    </div>
+</div>
+
+<!-- CONTENIDO OCULTO PARA PDF -->
+<div id="pdf-content" style="display: none; padding: 20px; font-family: Arial;">
+    <div style="text-align: center; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-bottom: 20px;">
+        <h1 style="color: #667eea;">Reporte de Análisis Financiero</h1>
+        <p>Generado el <span id="pdf-date"></span></p>
+    </div>
+    <div id="pdf-user" style="margin-bottom: 20px;"></div>
+    <div id="pdf-table"></div>
+</div>
+
+<script>
+    // Variables globales
+    let analisisData = null;
+
+    // Cambiar Pestañas
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+        
+        if(tab === 'nuevo') {
+            document.querySelector('.tabs button:nth-child(1)').classList.add('active');
+            document.getElementById('tab-nuevo').classList.add('active');
+        } else {
+            document.querySelector('.tabs button:nth-child(2)').classList.add('active');
+            document.getElementById('tab-consultar').classList.add('active');
+        }
+        hideAlert();
+    }
+
+    // === MANEJO DE NUEVO ANÁLISIS (POST) ===
+    document.getElementById('formNuevo').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const cedula = document.getElementById('cedula_new').value;
+        const nombre = document.getElementById('nombre_new').value;
+        const monto = document.getElementById('monto_new').value;
+
+        setLoading(true);
+        hideAlert();
+
+        try {
+            const response = await fetch('http://localhost:3977/api/analisis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cedula, nombre, monto })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                analisisData = {
+                    usuario: result.usuario,
+                    fecha: result.metadata?.fecha_consulta || new Date(),
+                    cooperativas: result.ranking
+                };
+                renderResults(analisisData);
+                showAlert('Análisis completado exitosamente', 'success');
+            } else {
+                showAlert(result.message || 'Error al procesar', 'error');
+            }
+        } catch (error) {
+            showAlert('Error de conexión: ' + error.message, 'error');
+        } finally {
+            setLoading(false);
+        }
+    });
+
+    // === MANEJO DE CONSULTA (GET) ===
+    document.getElementById('formConsulta').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const cedula = document.getElementById('cedula_consulta').value;
+
+        setLoading(true);
+        hideAlert();
+
+        try {
+            // Nota: Asegúrate de tener este endpoint GET en tu backend
+            const response = await fetch(`http://localhost:3977/api/analisis/historial?cedula=${cedula}`);
+            const result = await response.json();
+
+            if (result.success && result.sesiones && result.sesiones.length > 0) {
+                // Tomamos la última sesión
+                const ultimaSesion = result.sesiones[0];
+                
+                analisisData = {
+                    usuario: { cedula: ultimaSesion.cedula, nombre: ultimaSesion.nombre, monto_inversion: ultimaSesion.monto },
+                    fecha: ultimaSesion.fecha || new Date(),
+                    cooperativas: ultimaSesion.cooperativas
+                };
+                renderResults(analisisData);
+                showAlert('Historial encontrado', 'success');
+            } else {
+                showAlert('No se encontraron análisis para esta cédula', 'error');
+            }
+        } catch (error) {
+            showAlert('Error al consultar historial', 'error');
+        } finally {
+            setLoading(false);
+        }
+    });
+
+    // === RENDERIZAR RESULTADOS ===
+    function renderResults(data) {
+        document.getElementById('resultados').classList.add('show');
+        document.getElementById('btn-pdf').classList.add('show');
+
+        // Info Usuario
+        document.getElementById('user-display').innerHTML = `
+            <h3 style="margin-bottom:10px;">👤 ${data.usuario.nombre}</h3>
+            <div class="info-grid">
+                <div class="info-item"><div class="info-label">Cédula</div><div class="info-value">${data.usuario.cedula}</div></div>
+                <div class="info-item"><div class="info-label">Inversión</div><div class="info-value">$${data.usuario.monto_inversion}</div></div>
+                <div class="info-item"><div class="info-label">Fecha</div><div class="info-value">${new Date(data.fecha).toLocaleDateString()}</div></div>
+            </div>
+        `;
+
+        // Tabla
+        const tbody = document.getElementById('ranking-body');
+        tbody.innerHTML = '';
+
+        data.cooperativas.forEach((coop, index) => {
+            const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
+            
+            let indicadoresHTML = '';
+            if(coop.indicadores && coop.indicadores.length > 0) {
+                indicadoresHTML = `<div id="ind-${index}" class="indicators-panel">`;
+                coop.indicadores.forEach(ind => {
+                    indicadoresHTML += `
+                        <div class="indicator-box">
+                            <strong>${ind.codigo}: ${ind.nombre}</strong>
+                            <br>Valor: <b>${ind.valor}</b>
+                            <div class="formula">Fórmula: ${ind.formula_evaluada}</div>
+                        </div>
+                    `;
+                });
+                indicadoresHTML += `</div>`;
+            }
+
+            tbody.innerHTML += `
+                <tr class="${rankClass}">
+                    <td>#${coop.posicion || index + 1}</td>
+                    <td>${coop.ruc}</td>
+                    <td>${coop.razon_social}</td>
+                    <td>${coop.segmento}</td>
+                    <td><span class="badge">${coop.score_total}</span></td>
+                    <td>
+                        <button class="toggle-btn" onclick="toggleInd(${index})">Ver Fórmulas</button>
+                        ${indicadoresHTML}
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function toggleInd(index) {
+        const panel = document.getElementById(`ind-${index}`);
+        panel.classList.toggle('show');
+    }
+
+    // === GENERAR PDF ===
+    function downloadPDF() {
+        if (!analisisData) return;
+
+        const btn = document.getElementById('btn-pdf');
+        btn.innerText = '⏳ Generando...';
+        
+        // Preparar contenido oculto
+        const pdfContainer = document.getElementById('pdf-content');
+        pdfContainer.style.display = 'block';
+
+        document.getElementById('pdf-date').innerText = new Date().toLocaleString();
+        
+        let userHTML = `
+            <p><strong>Inversionista:</strong> ${analisisData.usuario.nombre} (${analisisData.usuario.cedula})</p>
+            <p><strong>Monto:</strong> $${analisisData.usuario.monto_inversion}</p>
+            <hr>
+        `;
+        document.getElementById('pdf-user').innerHTML = userHTML;
+
+        let tableHTML = `<table style="width:100%; border-collapse:collapse; font-size:12px;">
+            <tr style="background:#667eea; color:white;"><th style="padding:5px;">Rank</th><th style="padding:5px;">Cooperativa</th><th style="padding:5px;">Score</th></tr>`;
+        
+        analisisData.cooperativas.forEach((c, i) => {
+            tableHTML += `<tr style="border-bottom:1px solid #ddd;"><td style="padding:5px;">#${i+1}</td><td style="padding:5px;">${c.razon_social}</td><td style="padding:5px;">${c.score_total}</td></tr>`;
+        });
+        tableHTML += `</table>`;
+        document.getElementById('pdf-table').innerHTML = tableHTML;
+
+        // Generar
+        html2pdf().from(pdfContainer).set({
+            filename: `Analisis_${analisisData.usuario.cedula}.pdf`,
+            margin: 10,
+            html2canvas: { scale: 2 }
+        }).save().then(() => {
+            pdfContainer.style.display = 'none';
+            btn.innerText = '📄 Descargar Reporte PDF';
+        });
+    }
+
+    function showAlert(msg, type) {
+        const el = document.getElementById('alert');
+        el.className = `alert alert-${type}`;
+        el.innerText = msg;
+        el.style.display = 'block';
+        setTimeout(() => el.style.display = 'none', 5000);
+    }
+    function hideAlert() { document.getElementById('alert').style.display = 'none'; }
+    function setLoading(isLoading) {
+        const btns = document.querySelectorAll('.btn');
+        btns.forEach(b => b.disabled = isLoading);
+    }
+</script>
+</body>
+</html>

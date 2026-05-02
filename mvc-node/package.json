@@ -3,12 +3,12 @@
   "version": "1.0.0",
   "description": "MVC con Node",
   "main": "index.js",
- "scripts": {
-  "test": "echo \"Error: no test specified\" && exit 1",
-  "start": "nodemon index.js",
-  "dev": "node index.js",
-   "exportar": "node exportar.js"
-},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js",
+    "dev": "node index.js",
+    "exportar": "node exportar.js"
+  },
   "author": "Carlos S",
   "license": "MIT",
   "dependencies": {
