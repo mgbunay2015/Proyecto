@@ -4,10 +4,6 @@ const AnalisisController = require('../controllers/AnalisisController');
 
 // ✅ Asegúrate de que TODAS las rutas tengan callback
 router.post('/', AnalisisController.generarAnalisis);
-
-// Si tienes un GET, debe tener callback:
-// router.get('/historial', (req, res) => { ... });
-// o
-// router.get('/historial', AnalisisController.obtenerHistorial);
+router.get('/:cedula', AnalisisController.consultarAnalisis);
 
 module.exports = router;

@@ -35,7 +35,7 @@ class AnalisisRepository {
                 {
                     $group: {
                         _id: "$RUC",
-                        maxFecha: { $max: "$FECHA_DE_CORTE" },
+                        maxFecha: { $max: "$FECHA_CORTE" },
                         razon_social: { $first: "$RAZON_SOCIAL" },
                         segmento: { $first: "$SEGMENTO" }
                     }
@@ -59,7 +59,7 @@ class AnalisisRepository {
         try {
             const saldosDoc = await Transaccional.find({ 
                 RUC: ruc,
-                FECHA_DE_CORTE: fechaCorte 
+                FECHA_CORTE: fechaCorte 
             })
             .select('CUENTA SALDO')
             .lean();
@@ -133,6 +133,42 @@ class AnalisisRepository {
             throw error;
         }
     }
+
+
+
+    // repository/AnalisisRepository.js
+
+    /**
+     * ✅ CONSULTAR análisis por cédula (método estático)
+     * @param {string} cedula - Cédula del usuario a consultar
+     * @returns {Promise<Object|null>} - Documento de análisis o null
+     */
+    static async buscarAnalisisPorCedula(cedula) {
+        try {
+            console.log(`🔍 Repository: Buscando análisis para cédula: ${cedula}`);
+            
+            // Buscar el análisis más reciente para esta cédula
+            const analisis = await AnalisisInversion.findOne({ 
+                cedula: cedula.trim() 
+            })
+            .sort({ fecha_consulta: -1 })  // Ordenar por más reciente
+            .lean();  // ✅ lean() para devolver objeto plano (mejor rendimiento)
+            
+            if (analisis) {
+                console.log(`✅ Repository: Análisis encontrado - ID: ${analisis._id}`);
+            } else {
+                console.log(`⚠️ Repository: No se encontró análisis para cédula: ${cedula}`);
+            }
+            
+            return analisis;
+            
+        } catch (error) {
+            console.error('❌ Repository: Error buscando análisis por cédula:', error.message);
+            throw new Error(`No se pudo consultar el análisis: ${error.message}`);
+        }
+    }
+
+
 }
 
 // ✅ EXPORTAR LA CLASE CORRECTAMENTE

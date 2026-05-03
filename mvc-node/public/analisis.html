@@ -4,27 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Análisis Financiero - Cooperativas</title>
-    <!-- Librería para PDF -->
+    
+    <!-- Librerías externas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
     <style>
         :root {
-            --primary: #667eea;
-            --secondary: #764ba2;
-            --accent: #ff6b6b;
-            --success: #28a745;
+            --primary: #1565C0;
+            --secondary: #1976D2;
+            --accent: #42A5F5;
+            --blue-strong: #0D47A1;
+            --blue-medium: #1565C0;
+            --blue-normal: #1976D2;
+            --blue-light: #42A5F5;
+            --blue-very-light: #90CAF9;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
             padding: 20px;
             color: #333;
         }
 
-        .container { max-width: 1200px; margin: 0 auto; }
+        .container { max-width: 1400px; margin: 0 auto; }
 
         .header {
             background: white;
@@ -34,7 +41,8 @@
             margin-bottom: 20px;
             text-align: center;
         }
-        .header h1 { color: var(--secondary); }
+        .header h1 { color: var(--blue-medium); margin-bottom: 5px; }
+        .header p { color: #666; }
 
         .card {
             background: white;
@@ -44,76 +52,51 @@
             margin-bottom: 20px;
         }
 
-        /* Tabs Navigation */
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            justify-content: center;
-        }
+        /* Tabs */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
         .tab-btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-            background: #e0e0e0;
-            color: #666;
+            padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer;
+            font-weight: 600; transition: all 0.3s; background: #e0e0e0; color: #666; font-size: 0.95em;
         }
         .tab-btn.active {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.4);
+            background: var(--blue-medium); color: white; box-shadow: 0 4px 10px rgba(21, 101, 192, 0.4);
         }
 
         /* Forms */
         .form-section { display: none; animation: fadeIn 0.5s; }
         .form-section.active { display: block; }
-
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
+        .form-group input, .form-group select {
+            width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px;
+            font-size: 16px; background: white;
         }
-        .form-group input:focus { border-color: var(--primary); outline: none; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--blue-medium); outline: none; }
 
         .btn {
-            padding: 14px 28px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            color: white;
-            cursor: pointer;
-            width: 100%;
-            transition: transform 0.2s;
+            padding: 14px 28px; border: none; border-radius: 8px; font-size: 16px;
+            font-weight: bold; color: white; cursor: pointer; width: 100%; transition: transform 0.2s;
         }
         .btn:hover { transform: translateY(-2px); }
+        .btn:disabled { opacity: 0.7; cursor: wait; }
         
-        .btn-create { background: linear-gradient(135deg, var(--primary), var(--secondary)); }
-        .btn-search { background: linear-gradient(135deg, #11998e, #38ef7d); }
-        .btn-pdf { background: linear-gradient(135deg, #ff416c, #ff4b2b); margin-top: 20px; display: none; }
+        .btn-create { background: linear-gradient(135deg, var(--blue-medium), var(--blue-normal)); }
+        .btn-search { background: linear-gradient(135deg, #1565C0, #42A5F5); }
+        .btn-pdf { background: linear-gradient(135deg, #0D47A1, #1976D2); margin-top: 20px; display: none; }
         .btn-pdf.show { display: block; }
+        .btn-chart { background: linear-gradient(135deg, #1E88E5, #64B5F6); margin-top: 15px; display: none; }
+        .btn-chart.show { display: block; }
 
         /* Results */
         .results-container { display: none; }
         .results-container.show { display: block; animation: slideUp 0.5s; }
-        
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
         .user-info {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--blue-medium), var(--blue-strong));
+            color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;
         }
         .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
         .info-item { background: rgba(255,255,255,0.2); padding: 10px; border-radius: 8px; }
@@ -121,92 +104,420 @@
         .info-value { font-weight: bold; font-size: 1.1em; }
 
         /* Table */
-        .table-wrapper { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { background: var(--secondary); color: white; padding: 12px; text-align: left; }
+        .table-wrapper { overflow-x: auto; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: var(--blue-medium); color: white; padding: 12px; text-align: left; font-weight: 600; }
         td { padding: 12px; border-bottom: 1px solid #eee; }
         tr:hover { background: #f8f9fa; }
 
-        .rank-1 { background-color: #ffd700 !important; font-weight: bold; }
-        .rank-2 { background-color: #c0c0c0 !important; }
-        .rank-3 { background-color: #cd7f32 !important; color: white; }
+        .rank-1 { background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%) !important; font-weight: bold; border-left: 4px solid #1565C0; }
+        .rank-2 { background: linear-gradient(135deg, #E3F2FD 0%, #E1F5FE 100%) !important; border-left: 4px solid #1976D2; }
+        .rank-3 { background: linear-gradient(135deg, #F3E5F5 0%, #E8EAF6 100%) !important; border-left: 4px solid #1E88E5; }
 
-        .badge { padding: 4px 10px; border-radius: 15px; background: var(--primary); color: white; font-size: 0.9em; }
+        /* Badges con degradados azules */
+        .badge { 
+            padding: 4px 12px; border-radius: 15px; color: white; font-size: 0.9em; 
+            font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.2); display: inline-block; min-width: 70px; text-align: center;
+        }
+        .badge-blue-strong { background: linear-gradient(135deg, #0D47A1 0%, #1565C0 50%, #1976D2 100%); box-shadow: 0 2px 8px rgba(13, 71, 161, 0.4); }
+        .badge-blue-medium { background: linear-gradient(135deg, #1565C0 0%, #1976D2 50%, #1E88E5 100%); box-shadow: 0 2px 8px rgba(21, 101, 192, 0.35); }
+        .badge-blue-normal { background: linear-gradient(135deg, #1976D2 0%, #1E88E5 50%, #2196F3 100%); box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3); }
+        .badge-blue-light { background: linear-gradient(135deg, #1E88E5 0%, #2196F3 50%, #42A5F5 100%); box-shadow: 0 2px 8px rgba(30, 136, 229, 0.25); }
+        .badge-blue-very-light { background: linear-gradient(135deg, #42A5F5 0%, #64B5F6 50%, #90CAF9 100%); color: #0D47A1; text-shadow: none; }
+
+        /* Score Bars */
+        .score-bar-container { width: 100%; height: 8px; background: #E3F2FD; border-radius: 4px; overflow: hidden; margin-top: 5px; }
+        .score-bar { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+        .score-blue-strong { background: linear-gradient(90deg, #0D47A1, #1565C0, #1976D2); }
+        .score-blue-medium { background: linear-gradient(90deg, #1565C0, #1976D2, #1E88E5); }
+        .score-blue-normal { background: linear-gradient(90deg, #1976D2, #1E88E5, #2196F3); }
+        .score-blue-light { background: linear-gradient(90deg, #1E88E5, #2196F3, #42A5F5); }
+        .score-blue-very-light { background: linear-gradient(90deg, #42A5F5, #64B5F6, #90CAF9); }
+
+        /* Charts */
+        .charts-section { display: none; margin-top: 25px; border-top: 2px solid #eee; padding-top: 20px; }
+        .charts-section.show { display: block; }
+        .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(600px, 1fr)); gap: 20px; margin-top: 15px; }
+        .chart-card { background: #f8f9fa; border-radius: 12px; padding: 20px; border: 1px solid #e0e0e0; }
+        .chart-card h4 { margin-bottom: 15px; color: var(--blue-medium); }
+        .chart-container { position: relative; height: 400px; width: 100%; }
+        .chart-full { grid-column: 1 / -1; }
+
+        /* Filtros del gráfico */
+        .chart-filters {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e0e0e0;
+        }
+        .chart-filters h4 {
+            margin-bottom: 15px;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1em;
+        }
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        .filter-group label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+            display: block;
+            font-weight: 600;
+        }
+        .filter-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+        .filter-group select:focus {
+            border-color: var(--blue-medium);
+            outline: none;
+        }
+        .filter-summary {
+            margin-top: 15px;
+            padding: 10px;
+            background: #E3F2FD;
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: var(--blue-medium);
+            text-align: center;
+            font-weight: 600;
+        }
 
         /* Indicators */
-        .toggle-btn {
-            background: #f0f0f0; border: none; padding: 6px 12px;
-            border-radius: 5px; cursor: pointer; font-size: 0.85em;
-        }
-        .indicators-panel {
-            display: none; background: #f8f9fa; padding: 15px;
-            margin-top: 10px; border-radius: 8px; border-left: 4px solid var(--primary);
-        }
+        .toggle-btn { background: #f0f0f0; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.85em; }
+        .indicators-panel { display: none; background: #f8f9fa; padding: 15px; margin-top: 10px; border-radius: 8px; border-left: 4px solid var(--blue-medium); }
         .indicators-panel.show { display: block; }
         .indicator-box { margin-bottom: 10px; background: white; padding: 10px; border-radius: 5px; }
-        .formula { font-family: monospace; background: #eee; padding: 5px; border-radius: 3px; font-size: 0.9em; word-break: break-all; }
+        .indicator-box strong { color: var(--blue-medium); display: block; margin-bottom: 5px; }
+        .formula { font-family: monospace; background: #f5f5f5; padding: 8px; border-radius: 3px; font-size: 0.85em; word-break: break-all; }
+        
+        .resultado { margin-top: 8px; padding: 8px; border-left: 4px solid; border-radius: 4px; font-weight: 600; }
+        .resultado-positivo { background: #E8F5E9; color: #2E7D32; border-left-color: #4CAF50; }
+        .resultado-negativo { background: #FFEBEE; color: #C62828; border-left-color: #F44336; }
+        .resultado-cero { background: #FFF3E0; color: #E65100; border-left-color: #FF9800; }
 
-        .alert {
-            padding: 15px; border-radius: 8px; margin-bottom: 15px; display: none;
+        .valor-positivo { color: #2e7d32 !important; font-weight: bold; background: #E8F5E9; padding: 2px 8px; border-radius: 4px; }
+        .valor-negativo { color: #c62828 !important; font-weight: bold; background: #FFEBEE; padding: 2px 8px; border-radius: 4px; }
+        .valor-cero { color: #e65100 !important; font-weight: bold; background: #FFF3E0; padding: 2px 8px; border-radius: 4px; }
+
+        .alert { padding: 15px; border-radius: 8px; margin-bottom: 15px; display: none; }
+        .alert-error { background: #F8D7DA; color: #721C24; border: 1px solid #F5C6CB; }
+        .alert-success { background: #D4EDDA; color: #155724; border: 1px solid #C3E6CB; }
+        .alert-warning { background: #FFF3CD; color: #856404; border: 1px solid #FFEAA7; }
+
+        /* Loader */
+        .loader-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.95); z-index: 9999;
+            justify-content: center; align-items: center; flex-direction: column; gap: 20px;
         }
-        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .loader-overlay.show { display: flex; }
+        .spinner {
+            width: 60px; height: 60px; border: 6px solid #f3f3f3;
+            border-top: 6px solid var(--blue-medium); border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loader-text { font-weight: 700; color: var(--blue-medium); font-size: 1.3em; }
+        
+        body.loading .card, body.loading .header { pointer-events: none; opacity: 0.6; }
+
+        /* ================= CHATBOT STYLES ================= */
+        .chatbot-toggler {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--blue-medium), var(--blue-strong));
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(21, 101, 192, 0.4);
+            transition: transform 0.3s, box-shadow 0.3s;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .chatbot-toggler:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(21, 101, 192, 0.6);
+        }
+        .chatbot-toggler span { font-size: 28px; }
+
+        .chatbot-container {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            width: 380px;
+            max-height: 550px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            z-index: 10000;
+            overflow: hidden;
+            animation: slideIn 0.3s ease;
+        }
+        .chatbot-container.show { display: flex; }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chatbot-header {
+            background: linear-gradient(135deg, var(--blue-medium), var(--blue-strong));
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .chatbot-header h4 { margin: 0; font-size: 1.1em; display: flex; align-items: center; gap: 8px; }
+        .chatbot-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+        .chatbot-close:hover { background: rgba(255,255,255,0.2); }
+
+        .chatbot-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 0.95em;
+            line-height: 1.4;
+            animation: fadeIn 0.2s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .message.bot {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 5px;
+            align-self: flex-start;
+            color: #333;
+        }
+        .message.user {
+            background: linear-gradient(135deg, var(--blue-medium), var(--blue-normal));
+            color: white;
+            border-bottom-right-radius: 5px;
+            align-self: flex-end;
+        }
+
+        .message.bot strong { color: var(--blue-medium); }
+        .message.bot .score-highlight { 
+            background: #E3F2FD; 
+            color: var(--blue-strong); 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            font-weight: bold;
+        }
+
+        .chatbot-input {
+            padding: 12px 15px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+        .chatbot-input input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 0.95em;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .chatbot-input input:focus { border-color: var(--blue-medium); }
+        .chatbot-input button {
+            background: var(--blue-medium);
+            color: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .chatbot-input button:hover { background: var(--blue-strong); }
+        .chatbot-input button:disabled { background: #ccc; cursor: not-allowed; }
+
+        .suggestions {
+            padding: 10px 15px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .suggestion-chip {
+            padding: 6px 12px;
+            background: #E3F2FD;
+            color: var(--blue-medium);
+            border: 1px solid var(--blue-light);
+            border-radius: 15px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .suggestion-chip:hover {
+            background: var(--blue-medium);
+            color: white;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 12px 16px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 18px;
+            border-bottom-left-radius: 5px;
+            align-self: flex-start;
+            width: fit-content;
+        }
+        .typing-indicator.show { display: block; }
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #999;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+        @media (max-width: 768px) {
+            .chatbot-container {
+                width: calc(100% - 40px);
+                right: 20px;
+                bottom: 90px;
+                max-height: 450px;
+            }
+            .chatbot-toggler {
+                bottom: 20px;
+                right: 20px;
+                width: 55px;
+                height: 55px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .chart-grid { grid-template-columns: 1fr; }
+            .tabs { flex-direction: column; }
+            .tab-btn { width: 100%; }
+            .filter-row { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
 
+<!-- Loader -->
+<div id="loader" class="loader-overlay">
+    <div class="spinner"></div>
+    <div class="loader-text" id="loader-message">Procesando...</div>
+</div>
+
 <div class="container">
     <div class="header">
         <h1>🏦 Análisis Financiero de Cooperativas</h1>
-        <p>Sistema inteligente de evaluación de inversiones</p>
+        <p>Sistema inteligente con score 1-100 y evolución temporal</p>
     </div>
 
     <div class="card">
-        <!-- Tabs -->
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('nuevo')">📊 Realizar Nuevo Análisis</button>
+            <button class="tab-btn active" onclick="switchTab('nuevo')">📊 Nuevo Análisis</button>
             <button class="tab-btn" onclick="switchTab('consultar')">🔍 Consultar Historial</button>
         </div>
 
         <div id="alert" class="alert"></div>
 
-        <!-- FORMULARIO 1: NUEVO ANÁLISIS (3 DATOS) -->
+        <!-- Nuevo Análisis -->
         <div id="tab-nuevo" class="form-section active">
-            <h2 style="margin-bottom: 15px;">Datos del Inversionista</h2>
+            <h2 style="margin-bottom:15px;">Datos del Inversionista</h2>
             <form id="formNuevo">
                 <div class="form-group">
-                    <label>Cédula de Identidad *</label>
-                    <input type="text" id="cedula_new" required placeholder="Ej: 1714970926" maxlength="10">
+                    <label>📅 Período *</label>
+                    <select id="periodo_new" required><option value="">Cargando...</option></select>
                 </div>
                 <div class="form-group">
-                    <label>Nombre Completo *</label>
-                    <input type="text" id="nombre_new" required placeholder="Ej: MANUEL BUNAY">
+                    <label>Cédula *</label>
+                    <input type="text" id="cedula_new" required placeholder="10 dígitos" maxlength="10">
                 </div>
                 <div class="form-group">
-                    <label>Monto de Inversión (USD) *</label>
-                    <input type="number" id="monto_new" required placeholder="Ej: 500" min="1">
+                    <label>Nombre *</label>
+                    <input type="text" id="nombre_new" required>
                 </div>
-                <button type="submit" class="btn btn-create">🚀 Calcular Análisis</button>
+                <div class="form-group">
+                    <label>Monto (USD) *</label>
+                    <input type="number" id="monto_new" required min="1" step="0.01">
+                </div>
+                <button type="submit" class="btn btn-create">🚀 Calcular</button>
             </form>
         </div>
 
-        <!-- FORMULARIO 2: CONSULTAR (1 DATO) -->
+        <!-- Consultar -->
         <div id="tab-consultar" class="form-section">
-            <h2 style="margin-bottom: 15px;">Consultar por Cédula</h2>
+            <h2 style="margin-bottom:15px;">Consultar Historial</h2>
             <form id="formConsulta">
                 <div class="form-group">
-                    <label>Cédula de Identidad *</label>
-                    <input type="text" id="cedula_consulta" required placeholder="Ingrese su cédula" maxlength="10">
+                    <label>📅 Período *</label>
+                    <select id="periodo_consulta" required><option value="">Cargando...</option></select>
                 </div>
-                <button type="submit" class="btn btn-search">🔍 Buscar Historial</button>
+                <div class="form-group">
+                    <label>Cédula *</label>
+                    <input type="text" id="cedula_consulta" required placeholder="10 dígitos" maxlength="10">
+                </div>
+                <button type="submit" class="btn btn-search">🔍 Buscar</button>
             </form>
         </div>
     </div>
 
-    <!-- RESULTADOS -->
+    <!-- Resultados -->
     <div class="card results-container" id="resultados">
         <div class="user-info" id="user-display"></div>
         
+        <h3 style="margin:20px 0 10px; color:var(--blue-medium);">📋 Ranking de Cooperativas</h3>
         <div class="table-wrapper">
             <table id="ranking-table">
                 <thead>
@@ -215,7 +526,7 @@
                         <th>RUC</th>
                         <th>Cooperativa</th>
                         <th>Segmento</th>
-                        <th>Score</th>
+                        <th>Score (1-100)</th>
                         <th>Detalle</th>
                     </tr>
                 </thead>
@@ -223,220 +534,879 @@
             </table>
         </div>
 
-        <button id="btn-pdf" class="btn btn-pdf" onclick="downloadPDF()">📄 Descargar Reporte PDF</button>
+        <button id="btn-charts" class="btn btn-chart" onclick="toggleCharts()">📈 Ver Gráficos</button>
+        <button id="btn-pdf" class="btn btn-pdf" onclick="downloadPDF()">📄 Descargar PDF</button>
+
+        <!-- Gráficos CON FILTROS -->
+        <div class="charts-section" id="charts-section">
+            <h3 style="margin-bottom:15px; color:var(--blue-medium);">📊 Evolución Temporal</h3>
+            
+            <!-- FILTROS DEL GRÁFICO -->
+            <div class="chart-filters">
+                <h4><span>🔍</span> Filtros del Gráfico</h4>
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label>🏢 Cooperativa:</label>
+                        <select id="filter-coop" onchange="applyFilters()">
+                            <option value="all">✅ Todas</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>📐 Indicador:</label>
+                        <select id="filter-ind" onchange="applyFilters()">
+                            <option value="all">✅ Todos</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>📅 Desde:</label>
+                        <select id="filter-from" onchange="applyFilters()"></select>
+                    </div>
+                    <div class="filter-group">
+                        <label>📅 Hasta:</label>
+                        <select id="filter-to" onchange="applyFilters()"></select>
+                    </div>
+                </div>
+                <div id="filter-summary" class="filter-summary">Mostrando todas las líneas</div>
+            </div>
+            
+            <div class="chart-grid">
+                <div class="chart-card chart-full">
+                    <h4>Indicadores por Período</h4>
+                    <div class="chart-container"><canvas id="lineChart"></canvas></div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- CONTENIDO OCULTO PARA PDF -->
-<div id="pdf-content" style="display: none; padding: 20px; font-family: Arial;">
-    <div style="text-align: center; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-bottom: 20px;">
-        <h1 style="color: #667eea;">Reporte de Análisis Financiero</h1>
-        <p>Generado el <span id="pdf-date"></span></p>
+<!-- PDF Content -->
+<div id="pdf-content" style="display:none; padding:20px; font-family:Arial;"></div>
+
+<!-- ================= CHATBOT ================= -->
+<button class="chatbot-toggler" onclick="toggleChatbot()" title="Asistente Financiero">
+    <span>🤖</span>
+</button>
+
+<div class="chatbot-container" id="chatbot">
+    <div class="chatbot-header">
+        <h4>🤖 Asistente Financiero</h4>
+        <button class="chatbot-close" onclick="toggleChatbot()">✕</button>
     </div>
-    <div id="pdf-user" style="margin-bottom: 20px;"></div>
-    <div id="pdf-table"></div>
+    
+    <div class="chatbot-messages" id="chat-messages">
+        <div class="message bot">
+            ¡Hola! 👋 Soy tu asistente financiero. Puedo ayudarte a entender:<br><br>
+            • Por qué una cooperativa tiene el mejor score<br>
+            • Qué significan los indicadores (ROE, LIQ, MOR, etc.)<br>
+            • Comparar cooperativas entre sí<br><br>
+            <em>Prueba preguntando: "¿Por qué esta cooperativa es la mejor?"</em>
+        </div>
+        <div class="typing-indicator" id="typing"><span></span><span></span><span></span></div>
+    </div>
+    
+    <div class="suggestions" id="suggestions">
+        <span class="suggestion-chip" onclick="askQuestion('¿Por qué esta cooperativa es la mejor?')">🏆 ¿Por qué es la mejor?</span>
+        <span class="suggestion-chip" onclick="askQuestion('¿Qué es el ROE?')">📐 ¿Qué es el ROE?</span>
+        <span class="suggestion-chip" onclick="askQuestion('Explícame la liquidez')">💧 ¿Qué es liquidez?</span>
+        <span class="suggestion-chip" onclick="askQuestion('Comparar top 3')">📊 Comparar top 3</span>
+    </div>
+    
+    <div class="chatbot-input">
+        <input type="text" id="chat-input" placeholder="Escribe tu pregunta..." onkeypress="handleKeyPress(event)">
+        <button onclick="sendMessage()" id="send-btn">➤</button>
+    </div>
 </div>
 
 <script>
-    // Variables globales
-    let analisisData = null;
+// ================= VARIABLES =================
+let analisisData = null;
+let charts = {};
 
-    // Cambiar Pestañas
-    function switchTab(tab) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
-        
-        if(tab === 'nuevo') {
-            document.querySelector('.tabs button:nth-child(1)').classList.add('active');
-            document.getElementById('tab-nuevo').classList.add('active');
-        } else {
-            document.querySelector('.tabs button:nth-child(2)').classList.add('active');
-            document.getElementById('tab-consultar').classList.add('active');
-        }
-        hideAlert();
+// ================= CONFIG INDICADORES =================
+const CONFIG = {
+    'ROE_01': { nombre: 'Retorno sobre Patrimonio (ROE)', peso: 20, tipo: 'positivo', min: 0, max: 0.30, explicacion: 'Mide la rentabilidad que genera la cooperativa con el patrimonio de sus socios. Un ROE alto indica buena gestión del capital.' },
+    'ROA_01': { nombre: 'Retorno sobre Activos (ROA)', peso: 15, tipo: 'positivo', min: 0, max: 0.15, explicacion: 'Evalúa qué tan eficientemente la cooperativa usa sus activos para generar ganancias.' },
+    'LIQ_01': { nombre: 'Liquidez Corriente', peso: 15, tipo: 'positivo', min: 0, max: 3.0, explicacion: 'Indica la capacidad de pagar obligaciones a corto plazo. Valores entre 1.5 y 2.5 son ideales.' },
+    'MOR_01': { nombre: 'Morosidad de Cartera', peso: 20, tipo: 'negativo', min: 0, max: 0.15, explicacion: 'Porcentaje de cartera vencida. Mientras más bajo, mejor: indica menor riesgo de impago.' },
+    'SOL_01': { nombre: 'Solvencia General', peso: 15, tipo: 'positivo', min: 0, max: 1.0, explicacion: 'Mide la capacidad de la cooperativa para cumplir con todas sus obligaciones a largo plazo.' },
+    'REN_01': { nombre: 'Margen de Rentabilidad', peso: 10, tipo: 'positivo', min: 0, max: 0.25, explicacion: 'Porcentaje de utilidad sobre ingresos. Indica eficiencia operativa.' },
+    'EFI_01': { nombre: 'Eficiencia Operativa', peso: 5, tipo: 'positivo', min: 0, max: 1.0, explicacion: 'Relación entre costos operativos e ingresos. Valores cercanos a 1 indican alta eficiencia.' }
+};
+
+// ================= BASE DE CONOCIMIENTO DEL CHATBOT =================
+const CHATBOT_KB = {
+    greetings: ['hola', 'buenos días', 'buenas tardes', 'hey', 'hi'],
+    whyBest: ['por qué.*mejor', 'por que.*mejor', 'porque.*mejor', 'mejor cooperativa', 'top 1', 'primera', 'score más alto'],
+    explainIndicator: ['qué es.*[a-z]+', 'explica.*[a-z]+', 'significado.*[a-z]+', 'definición.*[a-z]+'],
+    compare: ['comparar', 'diferencia', 'vs', 'versus', 'cuál es mejor'],
+    score: ['score', 'puntuación', 'calificación', 'ranking'],
+    risk: ['riesgo', 'peligro', 'seguro', 'confiable'],
+    recommendation: ['recomienda', 'sugiere', 'cuál elegir', 'inversión']
+};
+
+// ================= FUNCIONES SCORE =================
+function calcularScore(coop) {
+    if (!coop.indicadores) return 50;
+    let total = 0, pesoTotal = 0;
+    coop.indicadores.forEach(ind => {
+        const cfg = CONFIG[ind.codigo];
+        if (!cfg) return;
+        const val = parseFloat(ind.valor);
+        if (isNaN(val)) return;
+        const norm = Math.min(1, Math.max(0, (val - cfg.min) / (cfg.max - cfg.min)));
+        const score = cfg.tipo === 'negativo' ? (1 - norm) * 100 : norm * 100;
+        total += score * cfg.peso;
+        pesoTotal += cfg.peso;
+    });
+    return pesoTotal ? Math.max(1, Math.min(100, Math.round(total / pesoTotal))) : 50;
+}
+
+function getBadgeClass(s) {
+    if (s >= 80) return 'badge-blue-strong';
+    if (s >= 60) return 'badge-blue-medium';
+    if (s >= 40) return 'badge-blue-normal';
+    if (s >= 20) return 'badge-blue-light';
+    return 'badge-blue-very-light';
+}
+
+function getBarClass(s) {
+    if (s >= 80) return 'score-blue-strong';
+    if (s >= 60) return 'score-blue-medium';
+    if (s >= 40) return 'score-blue-normal';
+    if (s >= 20) return 'score-blue-light';
+    return 'score-blue-very-light';
+}
+
+function getScoreLabel(s) {
+    if (s >= 80) return 'Excelente';
+    if (s >= 60) return 'Bueno';
+    if (s >= 40) return 'Regular';
+    if (s >= 20) return 'Deficiente';
+    return 'Crítico';
+}
+
+function getScoreColor(s) {
+    if (s >= 80) return '#1565C0';
+    if (s >= 60) return '#1976D2';
+    if (s >= 40) return '#2196F3';
+    if (s >= 20) return '#42A5F5';
+    return '#90CAF9';
+}
+
+// ================= LOADER =================
+function showLoader(msg) {
+    document.getElementById('loader-message').innerText = msg;
+    document.getElementById('loader').classList.add('show');
+    document.body.classList.add('loading');
+}
+function hideLoader() {
+    document.getElementById('loader').classList.remove('show');
+    document.body.classList.remove('loading');
+}
+
+// ================= CARGAR FECHAS (GARANTIZADO) =================
+function cargarFechas() {
+    console.log('🔹 Cargando fechas...');
+    const sel1 = document.getElementById('periodo_new');
+    const sel2 = document.getElementById('periodo_consulta');
+    
+    const fechas = [];
+    const hoy = new Date();
+    for (let i = 0; i < 12; i++) {
+        const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+        fechas.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
     }
+    
+    const opts = fechas.map(f => `<option value="${f}">${f}</option>`).join('');
+    sel1.innerHTML = opts;
+    sel2.innerHTML = opts;
+    sel1.value = fechas[0];
+    sel2.value = fechas[0];
+    
+    console.log('✅ Fechas cargadas:', fechas);
+    
+    fetch('http://localhost:3977/api/fechas-disponibles')
+        .then(r => r.json())
+        .then(d => {
+            if (d.success && d.fechas?.length > 0) {
+                const apiOpts = d.fechas.map(f => `<option value="${f}">${f}</option>`).join('');
+                sel1.innerHTML = apiOpts;
+                sel2.innerHTML = apiOpts;
+                sel1.value = d.fechas[0];
+                sel2.value = d.fechas[0];
+                console.log('📡 Actualizado desde API');
+            }
+        })
+        .catch(() => console.log('⚠️ Usando fechas locales'));
+}
 
-    // === MANEJO DE NUEVO ANÁLISIS (POST) ===
-    document.getElementById('formNuevo').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const cedula = document.getElementById('cedula_new').value;
-        const nombre = document.getElementById('nombre_new').value;
-        const monto = document.getElementById('monto_new').value;
+// ================= TABS =================
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+    document.querySelector(`.tab-btn:nth-child(${tab==='nuevo'?1:2})`).classList.add('active');
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    hideAlert();
+}
 
-        setLoading(true);
-        hideAlert();
+// ================= EVALUAR FORMULA =================
+function evaluarFormula(txt) {
+    try {
+        let expr = txt.replace('Fórmula:', '').trim();
+        if (!/^[\d\.\+\-\*\/\(\)\s]+$/.test(expr)) return {val:'Error', cls:'error'};
+        const res = new Function('return '+expr)();
+        if (isNaN(res)) return {val:'Indet', cls:'error'};
+        if (!isFinite(res)) return {val:'∞', cls:'cero'};
+        if (res === 0) return {val:'0', cls:'cero'};
+        return {val: parseFloat(res.toFixed(4)), cls: res > 0 ? 'positivo' : 'negativo'};
+    } catch { return {val:'Error', cls:'error'}; }
+}
 
-        try {
-            const response = await fetch('http://localhost:3977/api/analisis', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ cedula, nombre, monto })
+// ================= COLOREAR VALORES =================
+function colorearValores() {
+    document.querySelectorAll('.indicator-box').forEach(box => {
+        const m = box.innerHTML.match(/Valor:\s*([+-]?[\d.]+)/);
+        if (m) {
+            const v = parseFloat(m[1]);
+            const cls = v > 0 ? 'valor-positivo' : v < 0 ? 'valor-negativo' : 'valor-cero';
+            box.classList.remove('valor-positivo','valor-negativo','valor-cero');
+            box.classList.add(cls);
+        }
+    });
+}
+
+// ================= RESULTADOS FORMULAS =================
+function mostrarResultados() {
+    document.querySelectorAll('.formula').forEach(el => {
+        let resEl = el.parentElement.querySelector('.resultado');
+        if (!resEl) {
+            resEl = document.createElement('div');
+            resEl.className = 'resultado';
+            el.parentElement.appendChild(resEl);
+        }
+        const {val, cls} = evaluarFormula(el.textContent);
+        resEl.className = `resultado resultado-${cls}`;
+        resEl.innerHTML = `📊 Resultado: ${val}`;
+    });
+}
+
+// ================= RENDER RESULTADOS =================
+function renderResults(data) {
+    document.getElementById('resultados').classList.add('show');
+    document.getElementById('btn-pdf').classList.add('show');
+    document.getElementById('btn-charts').classList.add('show');
+
+    data.cooperativas.forEach(c => c.score_total = calcularScore(c));
+    data.cooperativas.sort((a,b) => b.score_total - a.score_total);
+    data.cooperativas.forEach((c,i) => c.posicion = i+1);
+
+    document.getElementById('user-display').innerHTML = `
+        <h3>👤 ${data.usuario.nombre}</h3>
+        <div class="info-grid">
+            <div class="info-item"><div class="info-label">Cédula</div><div class="info-value">${data.usuario.cedula}</div></div>
+            <div class="info-item"><div class="info-label">Inversión</div><div class="info-value">$${parseFloat(data.usuario.monto_inversion||0).toFixed(2)}</div></div>
+            <div class="info-item"><div class="info-label">Período</div><div class="info-value">${data.periodo}</div></div>
+            <div class="info-item"><div class="info-label">Cooperativas</div><div class="info-value">${data.cooperativas.length}</div></div>
+        </div>`;
+
+    const tbody = document.getElementById('ranking-body');
+    tbody.innerHTML = '';
+    
+    data.cooperativas.forEach((coop, idx) => {
+        const rc = idx===0?'rank-1':idx===1?'rank-2':idx===2?'rank-3':'';
+        const bc = getBadgeClass(coop.score_total);
+        const br = getBarClass(coop.score_total);
+        const lbl = getScoreLabel(coop.score_total);
+        
+        let indHTML = '';
+        if (coop.indicadores) {
+            indHTML = `<div id="ind-${idx}" class="indicators-panel">`;
+            coop.indicadores.forEach(ind => {
+                const f = evaluarFormula(ind.formula_evaluada || '');
+                indHTML += `
+                    <div class="indicator-box">
+                        <strong>${ind.codigo}: ${ind.nombre}</strong>
+                        <span class="valor-${f.cls}">Valor: ${ind.valor}</span>
+                        <div class="formula">${ind.formula_evaluada||'N/A'}</div>
+                        <div class="resultado resultado-${f.cls}">📊 Resultado: ${f.val}</div>
+                    </div>`;
             });
+            indHTML += '</div>';
+        }
 
-            const result = await response.json();
+        tbody.innerHTML += `
+            <tr class="${rc}">
+                <td><strong>#${coop.posicion}</strong></td>
+                <td style="font-family:monospace">${coop.ruc}</td>
+                <td>${coop.razon_social}</td>
+                <td><small>${coop.segmento}</small></td>
+                <td>
+                    <span class="badge ${bc}">${coop.score_total}/100</span>
+                    <small style="color:${getScoreColor(coop.score_total)}">${lbl}</small>
+                    <div class="score-bar-container"><div class="score-bar ${br}" style="width:${coop.score_total}%"></div></div>
+                </td>
+                <td><button class="toggle-btn" onclick="toggleInd(${idx})">Ver Fórmulas</button>${indHTML}</td>
+            </tr>`;
+    });
+    
+    setTimeout(() => { colorearValores(); mostrarResultados(); }, 200);
+}
 
-            if (result.success) {
-                analisisData = {
-                    usuario: result.usuario,
-                    fecha: result.metadata?.fecha_consulta || new Date(),
-                    cooperativas: result.ranking
-                };
-                renderResults(analisisData);
-                showAlert('Análisis completado exitosamente', 'success');
-            } else {
-                showAlert(result.message || 'Error al procesar', 'error');
-            }
-        } catch (error) {
-            showAlert('Error de conexión: ' + error.message, 'error');
-        } finally {
-            setLoading(false);
+function toggleInd(i) { document.getElementById(`ind-${i}`).classList.toggle('show'); }
+
+// ================= GRÁFICOS CON FILTROS =================
+function toggleCharts() {
+    const s = document.getElementById('charts-section');
+    const b = document.getElementById('btn-charts');
+    if (s.classList.contains('show')) {
+        s.classList.remove('show');
+        b.innerText = '📈 Ver Gráficos';
+    } else {
+        s.classList.add('show');
+        b.innerText = '🔻 Ocultar';
+        populateFilters();
+        applyFilters();
+    }
+}
+
+
+
+
+
+
+
+function populateFilters() {
+    if (!analisisData?.cooperativas) return;
+    
+    const coopSelect = document.getElementById('filter-coop');
+    const indSelect = document.getElementById('filter-ind');
+    const fromSelect = document.getElementById('filter-from');
+    const toSelect = document.getElementById('filter-to');
+    
+    // ✅ CORRECCIÓN 1: Filtrar cooperativas únicas por RUC (evitar duplicados)
+    const cooperativasUnicas = new Map();
+    analisisData.cooperativas.forEach(c => {
+        if (!cooperativasUnicas.has(c.ruc)) {
+            cooperativasUnicas.set(c.ruc, c);
         }
     });
-
-    // === MANEJO DE CONSULTA (GET) ===
-    document.getElementById('formConsulta').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const cedula = document.getElementById('cedula_consulta').value;
-
-        setLoading(true);
-        hideAlert();
-
-        try {
-            // Nota: Asegúrate de tener este endpoint GET en tu backend
-            const response = await fetch(`http://localhost:3977/api/analisis/historial?cedula=${cedula}`);
-            const result = await response.json();
-
-            if (result.success && result.sesiones && result.sesiones.length > 0) {
-                // Tomamos la última sesión
-                const ultimaSesion = result.sesiones[0];
-                
-                analisisData = {
-                    usuario: { cedula: ultimaSesion.cedula, nombre: ultimaSesion.nombre, monto_inversion: ultimaSesion.monto },
-                    fecha: ultimaSesion.fecha || new Date(),
-                    cooperativas: ultimaSesion.cooperativas
-                };
-                renderResults(analisisData);
-                showAlert('Historial encontrado', 'success');
-            } else {
-                showAlert('No se encontraron análisis para esta cédula', 'error');
-            }
-        } catch (error) {
-            showAlert('Error al consultar historial', 'error');
-        } finally {
-            setLoading(false);
+    
+    coopSelect.innerHTML = '<option value="all">✅ Todas</option>';
+    cooperativasUnicas.forEach((coop, ruc) => {
+        // Mostrar nombre completo o truncar inteligentemente
+        const nombre = coop.razon_social ? coop.razon_social.substring(0, 50) : `RUC: ${ruc}`;
+        coopSelect.innerHTML += `<option value="${String(ruc)}">${nombre}</option>`;
+    });
+    
+    // ✅ CORRECCIÓN 2: Obtener indicadores únicos con sus NOMBRES (no códigos)
+    const indicadoresMap = new Map();
+    analisisData.cooperativas.forEach(c => {
+        if (c.indicadores) {
+            c.indicadores.forEach(ind => {
+                if (!indicadoresMap.has(ind.codigo)) {
+                    // Buscar nombre en CONFIG o usar el que viene del backend
+                    const configInd = CONFIG[ind.codigo];
+                    indicadoresMap.set(ind.codigo, {
+                        codigo: ind.codigo,
+                        nombre: configInd ? configInd.nombre : (ind.nombre || ind.codigo)
+                    });
+                }
+            });
         }
     });
+    
+    indSelect.innerHTML = '<option value="all">✅ Todos</option>';
+    indicadoresMap.forEach((indData, codigo) => {
+        // Mostrar NOMBRE completo del indicador
+        indSelect.innerHTML += `<option value="${codigo}">${indData.nombre}</option>`;
+    });
+    
+    // ✅ CORRECCIÓN 3: Obtener períodos REALES de los datos
+    const periodosSet = new Set();
+    
+    // Si hay fecha_corte en las cooperativas, usarla
+    analisisData.cooperativas.forEach(c => {
+        if (c.fecha_corte) {
+            periodosSet.add(c.fecha_corte);
+        }
+    });
+    
+    // Si no hay fechas en los datos, usar el período del análisis + meses anteriores
+    if (periodosSet.size === 0 && analisisData.periodo) {
+        periodosSet.add(analisisData.periodo);
+        const [year, month] = analisisData.periodo.split('-').map(Number);
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date(year, month - 1 - i, 1);
+            const p = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            periodosSet.add(p);
+        }
+    }
+    
+    // Si aún está vacío, generar fechas genéricas
+    if (periodosSet.size === 0) {
+        const hoy = new Date();
+        for (let i = 0; i < 12; i++) {
+            const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+            periodosSet.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+        }
+    }
+    
+    // Convertir a array y ordenar
+    const periodos = Array.from(periodosSet).sort();
+    
+    // ✅ Llenar combos de período
+    fromSelect.innerHTML = '';
+    toSelect.innerHTML = '';
+    
+    periodos.forEach(p => {
+        const optionFrom = document.createElement('option');
+        optionFrom.value = p;
+        optionFrom.textContent = p;
+        fromSelect.appendChild(optionFrom);
+        
+        const optionTo = document.createElement('option');
+        optionTo.value = p;
+        optionTo.textContent = p;
+        toSelect.appendChild(optionTo);
+    });
+    
+    // ✅ Seleccionar primero y último por defecto
+    if (periodos.length > 0) {
+        fromSelect.value = periodos[0];
+        toSelect.value = periodos[periodos.length - 1];
+    }
+}
 
-    // === RENDERIZAR RESULTADOS ===
-    function renderResults(data) {
-        document.getElementById('resultados').classList.add('show');
-        document.getElementById('btn-pdf').classList.add('show');
 
-        // Info Usuario
-        document.getElementById('user-display').innerHTML = `
-            <h3 style="margin-bottom:10px;">👤 ${data.usuario.nombre}</h3>
-            <div class="info-grid">
-                <div class="info-item"><div class="info-label">Cédula</div><div class="info-value">${data.usuario.cedula}</div></div>
-                <div class="info-item"><div class="info-label">Inversión</div><div class="info-value">$${data.usuario.monto_inversion}</div></div>
-                <div class="info-item"><div class="info-label">Fecha</div><div class="info-value">${new Date(data.fecha).toLocaleDateString()}</div></div>
-            </div>
-        `;
 
-        // Tabla
-        const tbody = document.getElementById('ranking-body');
-        tbody.innerHTML = '';
+function applyFilters() {
+    const coopFilter = document.getElementById('filter-coop').value;
+    const indFilter = document.getElementById('filter-ind').value;
+    const fromFilter = document.getElementById('filter-from').value;
+    const toFilter = document.getElementById('filter-to').value;
+    
+    renderChartFiltered(coopFilter, indFilter, fromFilter, toFilter);
+    updateFilterSummary(coopFilter, indFilter, fromFilter, toFilter);
+}
 
-        data.cooperativas.forEach((coop, index) => {
-            const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
+function updateFilterSummary(coop, ind, from, to) {
+    const summary = document.getElementById('filter-summary');
+    let text = '📊 Filtrando: ';
+    text += coop === 'all' ? 'Todas las cooperativas' : 'Cooperativa seleccionada';
+    text += ' | ';
+    text += ind === 'all' ? 'Todos los indicadores' : `Indicador: ${ind}`;
+    text += ' | ';
+    text += `Período: ${from} → ${to}`;
+    summary.innerText = text;
+}
+
+function renderChartFiltered(coopFilter, indFilter, fromFilter, toFilter) {
+    const ctx = document.getElementById('lineChart').getContext('2d');
+    if (charts.line) charts.line.destroy();
+    
+    // Generar períodos de referencia
+    const allPeriodos = [];
+    const hoy = new Date();
+    for (let i = 0; i < 12; i++) {
+        const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+        allPeriodos.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+    }
+    
+    const periodosFiltrados = allPeriodos.filter(p => p >= fromFilter && p <= toFilter).reverse();
+    const colores = ['#E53935', '#43A047', '#FB8C00', '#8E24AA', '#00ACC1', '#D81B60', '#5E35B1', '#F4511E', '#3949AB', '#00897B', '#FDD835', '#6D4C41'];
+    
+    // Filtrar cooperativas
+    const cooperativasFiltradas = coopFilter === 'all' 
+        ? analisisData.cooperativas 
+        : analisisData.cooperativas.filter(c => String(c.ruc) === String(coopFilter));
+    
+    // Obtener indicadores únicos
+    const allIndicadores = new Set();
+    cooperativasFiltradas.forEach(c => { 
+        if (c.indicadores) c.indicadores.forEach(i => allIndicadores.add(i.codigo)); 
+    });
+    const indicadoresFiltrados = indFilter === 'all' ? Array.from(allIndicadores) : [indFilter];
+    
+    const datasets = [];
+    let colorIdx = 0;
+    
+    cooperativasFiltradas.forEach((coop) => {
+        indicadoresFiltrados.forEach(indCodigo => {
+            const color = colores[colorIdx % colores.length];
             
-            let indicadoresHTML = '';
-            if(coop.indicadores && coop.indicadores.length > 0) {
-                indicadoresHTML = `<div id="ind-${index}" class="indicators-panel">`;
-                coop.indicadores.forEach(ind => {
-                    indicadoresHTML += `
-                        <div class="indicator-box">
-                            <strong>${ind.codigo}: ${ind.nombre}</strong>
-                            <br>Valor: <b>${ind.valor}</b>
-                            <div class="formula">Fórmula: ${ind.formula_evaluada}</div>
-                        </div>
-                    `;
-                });
-                indicadoresHTML += `</div>`;
+            // ✅ EXTRAER DATO REAL del indicador
+            const indicadorData = coop.indicadores?.find(ind => ind.codigo === indCodigo);
+            const valorReal = indicadorData ? parseFloat(indicadorData.valor) : null;
+            const nombreIndicador = indicadorData?.nombre || indCodigo;
+            
+            // ✅ MAPEAR VALORES REALES por período
+            const chartData = periodosFiltrados.map(periodo => {
+                // Si el período coincide con fecha_corte o período del análisis, usar valor real
+                if (valorReal !== null && (coop.fecha_corte === periodo || periodo === analisisData.periodo)) {
+                    return valorReal;
+                }
+                // Para otros períodos: retornar null (Chart.js lo manejará con spanGaps)
+                return null;
+            });
+            
+            datasets.push({
+                label: `${coop.razon_social.substring(0, 20)} - ${nombreIndicador}`,
+                data: chartData,  // ✅ AHORA USA DATOS REALES
+                borderColor: color, 
+                backgroundColor: color + '33', 
+                borderWidth: 3, 
+                tension: 0.4,
+                pointRadius: 5, 
+                pointHoverRadius: 8, 
+                pointBackgroundColor: color,
+                pointBorderColor: '#fff', 
+                pointBorderWidth: 2, 
+                fill: false,
+                spanGaps: true  // ✅ Conecta puntos aunque haya nulls intermedios
+            });
+            colorIdx++;
+        });
+    });
+    
+    charts.line = new Chart(ctx, {
+        type: 'line',
+        data: { labels: periodosFiltrados, datasets: datasets },
+        options: {
+            responsive: true, 
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { 
+                    position: 'bottom', 
+                    labels: { font: { size: 10 }, boxWidth: 12, padding: 10, usePointStyle: true } 
+                },
+                tooltip: { 
+                    mode: 'index', 
+                    intersect: false, 
+                    callbacks: { 
+                        label: (ctx) => {
+                            const val = ctx.parsed.y;
+                            return val !== null && val !== undefined 
+                                ? `${ctx.dataset.label}: ${Number(val).toFixed(4)}` 
+                                : `${ctx.dataset.label}: Sin dato`;
+                        } 
+                    }, 
+                    backgroundColor: 'rgba(0,0,0,0.85)', 
+                    titleFont: { size: 13 }, 
+                    bodyFont: { size: 12 }, 
+                    padding: 12, 
+                    cornerRadius: 8 
+                }
+            },
+            scales: {
+                x: { 
+                    title: { display: true, text: 'Período', font: { size: 13, weight: 'bold' } }, 
+                    grid: { color: 'rgba(0,0,0,0.05)' } 
+                },
+                y: { 
+                    title: { display: true, text: 'Valor', font: { size: 13, weight: 'bold' } }, 
+                    beginAtZero: true, 
+                    grid: { color: 'rgba(0,0,0,0.05)' },
+                    ticks: { callback: function(value) { return Number(value).toFixed(4); } }
+                }
             }
+        }
+    });
+    
+    // ✅ LOG DE VERIFICACIÓN (puedes eliminarlo después)
+    console.log('📊 Gráfico renderizado con datos reales:', {
+        cooperativas: cooperativasFiltradas.length,
+        indicadores: indicadoresFiltrados,
+        periodos: periodosFiltrados,
+        primerDataset: datasets[0]?.data
+    });
+}
 
-            tbody.innerHTML += `
-                <tr class="${rankClass}">
-                    <td>#${coop.posicion || index + 1}</td>
-                    <td>${coop.ruc}</td>
-                    <td>${coop.razon_social}</td>
-                    <td>${coop.segmento}</td>
-                    <td><span class="badge">${coop.score_total}</span></td>
-                    <td>
-                        <button class="toggle-btn" onclick="toggleInd(${index})">Ver Fórmulas</button>
-                        ${indicadoresHTML}
-                    </td>
-                </tr>
-            `;
+
+
+function renderChart() { renderChartFiltered('all', 'all', '2025-12', '2026-05'); }
+
+// ================= FORMULARIOS =================
+document.getElementById('formNuevo').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const p = document.getElementById('periodo_new').value;
+    const c = document.getElementById('cedula_new').value;
+    
+    showLoader('Calculando...');
+    try {
+        const res = await fetch(`http://localhost:3977/api/analisis?periodo=${p}`, {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ cedula: c, nombre: document.getElementById('nombre_new').value, monto: document.getElementById('monto_new').value })
         });
+        const data = await res.json();
+        if (data.success) {
+            analisisData = { usuario: data.usuario, periodo: p, cooperativas: data.ranking };
+            renderResults(analisisData);
+            showAlert('✅ Análisis completado', 'success');
+            setTimeout(() => toggleCharts(), 800);
+        } else { showAlert(data.message || 'Error', 'error'); }
+    } catch (err) { showAlert('Error: ' + err.message, 'error'); }
+    finally { hideLoader(); }
+});
+
+document.getElementById('formConsulta').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const p = document.getElementById('periodo_consulta').value;
+    const c = document.getElementById('cedula_consulta').value;
+    
+    showLoader('Buscando...');
+    try {
+        const res = await fetch(`http://localhost:3977/api/historial?cedula=${c}&periodo=${p}`);
+        const data = await res.json();
+        if (data.success) {
+            const d = data.data || data;
+            analisisData = { usuario: d.usuario || {cedula:c, nombre:'Consultado', monto_inversion:0}, periodo: p, cooperativas: d.cooperativas || [] };
+            renderResults(analisisData);
+            showAlert('✅ Historial encontrado', 'success');
+            setTimeout(() => toggleCharts(), 800);
+        } else { showAlert('No se encontraron datos', 'error'); }
+    } catch (err) { showAlert('Error: ' + err.message, 'error'); }
+    finally { hideLoader(); }
+});
+
+// ================= PDF =================
+function downloadPDF() {
+    if (!analisisData) { showAlert('No hay datos', 'error'); return; }
+    const btn = document.getElementById('btn-pdf');
+    btn.innerText = 'Generando...'; btn.disabled = true;
+
+    const div = document.createElement('div');
+    div.innerHTML = `<h1 style="color:#1565C0;text-align:center">Análisis Financiero</h1>
+        <p><strong>Período:</strong> ${analisisData.periodo}</p><p><strong>Inversionista:</strong> ${analisisData.usuario.nombre}</p><hr>
+        <table style="width:100%;border-collapse:collapse;margin-top:20px">
+            <tr style="background:#1565C0;color:white"><th style="padding:8px;border:1px solid #ddd">Rank</th><th style="padding:8px;border:1px solid #ddd">Cooperativa</th><th style="padding:8px;border:1px solid #ddd">Score</th></tr>
+            ${analisisData.cooperativas.map((c,i) => `<tr><td style="padding:8px;border:1px solid #ddd">#${i+1}</td><td style="padding:8px;border:1px solid #ddd">${c.razon_social}</td><td style="padding:8px;border:1px solid #ddd">${c.score_total}/100</td></tr>`).join('')}
+        </table>`;
+
+    html2pdf().set({ margin: 10, filename: `Analisis_${analisisData.usuario.cedula}_${analisisData.periodo}.pdf`, html2canvas: { scale: 2 }, jsPDF: { format: 'a4' } }).from(div).save().then(() => {
+        btn.innerText = '📄 Descargar PDF'; btn.disabled = false; showAlert('✅ PDF descargado', 'success');
+    });
+}
+
+// ================= UTILS =================
+function showAlert(msg, type) {
+    const el = document.getElementById('alert');
+    el.className = `alert alert-${type}`; el.innerText = msg; el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 6000);
+}
+function hideAlert() { document.getElementById('alert').style.display = 'none'; }
+
+// ================= CHATBOT FUNCTIONS =================
+function toggleChatbot() {
+    const chat = document.getElementById('chatbot');
+    chat.classList.toggle('show');
+    if (chat.classList.contains('show')) {
+        document.getElementById('chat-input').focus();
+        // Actualizar sugerencias con datos reales si existen
+        if (analisisData?.cooperativas?.[0]) {
+            updateChatSuggestions();
+        }
     }
+}
 
-    function toggleInd(index) {
-        const panel = document.getElementById(`ind-${index}`);
-        panel.classList.toggle('show');
+function updateChatSuggestions() {
+    const suggestions = document.getElementById('suggestions');
+    const topCoop = analisisData.cooperativas[0];
+    suggestions.innerHTML = `
+        <span class="suggestion-chip" onclick="askQuestion('¿Por qué ${topCoop.razon_social.substring(0,20)} es la mejor?')">🏆 ¿Por qué es la mejor?</span>
+        <span class="suggestion-chip" onclick="askQuestion('¿Qué es el ROE?')">📐 ¿Qué es el ROE?</span>
+        <span class="suggestion-chip" onclick="askQuestion('Explícame la liquidez')">💧 ¿Qué es liquidez?</span>
+        <span class="suggestion-chip" onclick="askQuestion('Comparar top 3')">📊 Comparar top 3</span>
+    `;
+}
+
+function addMessage(text, isUser = false) {
+    const container = document.getElementById('chat-messages');
+    const msg = document.createElement('div');
+    msg.className = `message ${isUser ? 'user' : 'bot'}`;
+    msg.innerHTML = text;
+    container.insertBefore(msg, document.getElementById('typing'));
+    container.scrollTop = container.scrollHeight;
+}
+
+function showTyping() { document.getElementById('typing').classList.add('show'); }
+function hideTyping() { document.getElementById('typing').classList.remove('show'); }
+
+function askQuestion(question) {
+    document.getElementById('chat-input').value = question;
+    sendMessage();
+}
+
+function handleKeyPress(e) {
+    if (e.key === 'Enter') sendMessage();
+}
+
+function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const question = input.value.trim();
+    if (!question) return;
+    
+    addMessage(question, true);
+    input.value = '';
+    document.getElementById('send-btn').disabled = true;
+    showTyping();
+    
+    // Simular "pensando" del bot
+    setTimeout(() => {
+        const response = generateResponse(question.toLowerCase());
+        hideTyping();
+        addMessage(response);
+        document.getElementById('send-btn').disabled = false;
+    }, 800 + Math.random() * 700);
+}
+
+function generateResponse(question) {
+    // 1. Saludos
+    if (CHATBOT_KB.greetings.some(k => question.includes(k))) {
+        return '¡Hola! 👋 Estoy aquí para ayudarte con tu análisis financiero. ¿En qué puedo asistirte hoy?';
     }
-
-    // === GENERAR PDF ===
-    function downloadPDF() {
-        if (!analisisData) return;
-
-        const btn = document.getElementById('btn-pdf');
-        btn.innerText = '⏳ Generando...';
+    
+    // 2. ¿Por qué es la mejor?
+    if (CHATBOT_KB.whyBest.some(k => new RegExp(k).test(question))) {
+        if (!analisisData?.cooperativas?.[0]) {
+            return 'Primero realiza un análisis para que pueda explicarte por qué una cooperativa destaca. 📊';
+        }
+        const top = analisisData.cooperativas[0];
+        const score = calcularScore(top);
+        const label = getScoreLabel(score);
         
-        // Preparar contenido oculto
-        const pdfContainer = document.getElementById('pdf-content');
-        pdfContainer.style.display = 'block';
-
-        document.getElementById('pdf-date').innerText = new Date().toLocaleString();
+        // Encontrar indicadores fuertes
+        const strongInds = top.indicadores?.filter(ind => {
+            const cfg = CONFIG[ind.codigo];
+            if (!cfg) return false;
+            const val = parseFloat(ind.valor);
+            if (isNaN(val)) return false;
+            const norm = (val - cfg.min) / (cfg.max - cfg.min);
+            return cfg.tipo === 'positivo' ? norm > 0.7 : norm < 0.3;
+        }) || [];
         
-        let userHTML = `
-            <p><strong>Inversionista:</strong> ${analisisData.usuario.nombre} (${analisisData.usuario.cedula})</p>
-            <p><strong>Monto:</strong> $${analisisData.usuario.monto_inversion}</p>
-            <hr>
-        `;
-        document.getElementById('pdf-user').innerHTML = userHTML;
-
-        let tableHTML = `<table style="width:100%; border-collapse:collapse; font-size:12px;">
-            <tr style="background:#667eea; color:white;"><th style="padding:5px;">Rank</th><th style="padding:5px;">Cooperativa</th><th style="padding:5px;">Score</th></tr>`;
+        let response = `<strong>🏆 ${top.razon_social}</strong> lidera el ranking con un score de <span class="score-highlight">${score}/100</span> (${label}).<br><br>`;
         
-        analisisData.cooperativas.forEach((c, i) => {
-            tableHTML += `<tr style="border-bottom:1px solid #ddd;"><td style="padding:5px;">#${i+1}</td><td style="padding:5px;">${c.razon_social}</td><td style="padding:5px;">${c.score_total}</td></tr>`;
+        if (strongInds.length > 0) {
+            response += '<strong>Principales fortalezas:</strong><ul style="margin:8px 0 8px 20px;">';
+            strongInds.slice(0, 3).forEach(ind => {
+                const cfg = CONFIG[ind.codigo];
+                response += `<li><strong>${cfg?.nombre || ind.codigo}:</strong> ${ind.valor} ${cfg?.tipo === 'negativo' ? '↓ (bajo es mejor)' : '↑ (alto es mejor)'}</li>`;
+            });
+            response += '</ul>';
+        }
+        
+        response += 'Estos indicadores, ponderados según su importancia financiera, determinan su posición destacada. ¿Te gustaría que explique algún indicador en particular?';
+        return response;
+    }
+    
+    // 3. Explicar indicador
+    const indMatch = question.match(/(?:qué es|explica|significado|definición).*\b([A-Z]{3}_\d{2}|roe|roa|liq|mor|sol|ren|efi)\b/i);
+    if (indMatch) {
+        const code = indMatch[1].toUpperCase();
+        const ind = Object.values(CONFIG).find(c => c.nombre.toLowerCase().includes(code.toLowerCase()) || c.nombre.toLowerCase().includes(code.replace('_01','').toLowerCase()));
+        if (ind) {
+            return `<strong>${ind.nombre}</strong><br><br>${ind.explicacion}<br><br><em>Rango ideal: ${ind.min} - ${ind.max} | Peso en score: ${ind.peso}%</em>`;
+        }
+        // Buscar por código exacto
+        const cfg = CONFIG[code];
+        if (cfg) {
+            return `<strong>${cfg.nombre}</strong><br><br>${cfg.explicacion}<br><br><em>Rango ideal: ${cfg.min} - ${cfg.max} | Peso en score: ${cfg.peso}%</em>`;
+        }
+        return 'No encontré ese indicador. Prueba con: ROE, LIQ, MOR, SOL, REN o EFI.';
+    }
+    
+    // 4. Comparar
+    if (CHATBOT_KB.compare.some(k => question.includes(k))) {
+        if (!analisisData?.cooperativas?.length) return 'Realiza un análisis primero para poder comparar cooperativas. 📈';
+        const top3 = analisisData.cooperativas.slice(0, 3);
+        let response = '<strong>📊 Comparativa Top 3:</strong><br><br>';
+        top3.forEach((c, i) => {
+            const score = calcularScore(c);
+            const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+            response += `${medal} <strong>#${i+1} ${c.razon_social}</strong>: <span class="score-highlight">${score}/100</span> (${getScoreLabel(score)})<br>`;
         });
-        tableHTML += `</table>`;
-        document.getElementById('pdf-table').innerHTML = tableHTML;
-
-        // Generar
-        html2pdf().from(pdfContainer).set({
-            filename: `Analisis_${analisisData.usuario.cedula}.pdf`,
-            margin: 10,
-            html2canvas: { scale: 2 }
-        }).save().then(() => {
-            pdfContainer.style.display = 'none';
-            btn.innerText = '📄 Descargar Reporte PDF';
+        response += '<br>¿Quieres que profundice en algún indicador específico de estas cooperativas?';
+        return response;
+    }
+    
+    // 5. Preguntar por score
+    if (CHATBOT_KB.score.some(k => question.includes(k))) {
+        if (!analisisData?.cooperativas) return 'Primero realiza un análisis para ver los scores. 🎯';
+        const coopName = question.match(/(?:score|puntuación|calificación).*de\s+(.+)/i)?.[1];
+        if (coopName) {
+            const coop = analisisData.cooperativas.find(c => c.razon_social.toLowerCase().includes(coopName.toLowerCase()));
+            if (coop) {
+                const score = calcularScore(coop);
+                return `<strong>${coop.razon_social}</strong> tiene un score de <span class="score-highlight">${score}/100</span> (${getScoreLabel(score)}).<br><br>Este score se calcula ponderando ${coop.indicadores?.length || 0} indicadores financieros clave.`;
+            }
+        }
+        // Mostrar todos
+        let response = '<strong>Scores del análisis actual:</strong><br><br>';
+        analisisData.cooperativas.slice(0, 5).forEach((c,i) => {
+            const score = calcularScore(c);
+            response += `#${i+1} ${c.razon_social.substring(0,25)}: <span class="score-highlight">${score}</span><br>`;
         });
+        return response;
     }
+    
+    // 6. Preguntas sobre riesgo
+    if (CHATBOT_KB.risk.some(k => question.includes(k))) {
+        if (!analisisData?.cooperativas?.[0]) return 'Realiza un análisis para evaluar el riesgo de las cooperativas. 🔍';
+        const top = analisisData.cooperativas[0];
+        const mor = top.indicadores?.find(i => i.codigo === 'MOR_01');
+        const sol = top.indicadores?.find(i => i.codigo === 'SOL_01');
+        
+        let response = '<strong>🔍 Análisis de riesgo:</strong><br><br>';
+        if (mor) {
+            const riskLevel = parseFloat(mor.valor) < 0.03 ? '✅ Bajo' : parseFloat(mor.valor) < 0.08 ? '⚠️ Moderado' : '🔴 Alto';
+            response += `• Morosidad: ${mor.valor} (${riskLevel} riesgo de impago)<br>`;
+        }
+        if (sol) {
+            const solvLevel = parseFloat(sol.valor) > 0.7 ? '✅ Fuerte' : parseFloat(sol.valor) > 0.4 ? '⚠️ Aceptable' : '🔴 Débil';
+            response += `• Solvencia: ${sol.valor} (${solvLevel} capacidad de pago a largo plazo)<br>`;
+        }
+        response += '<br><em>Nota: Una cooperativa con baja morosidad y alta solvencia presenta menor riesgo para inversionistas.</em>';
+        return response;
+    }
+    
+    // 7. Recomendación de inversión
+    if (CHATBOT_KB.recommendation.some(k => question.includes(k))) {
+        if (!analisisData?.cooperativas?.[0]) return 'Primero realiza un análisis para recibir recomendaciones. 💡';
+        const top = analisisData.cooperativas[0];
+        const score = calcularScore(top);
+        
+        if (score >= 80) {
+            return `<strong>💡 Recomendación:</strong><br><br>${top.razon_social} es una <strong>excelente opción</strong> con score ${score}/100.<br><br>Sus indicadores muestran gestión financiera sólida, baja morosidad y buena rentabilidad. Ideal para inversionistas que buscan <strong>estabilidad y rendimiento</strong>.<br><br><em>Recuerda diversificar tu inversión y revisar los términos específicos de cada producto.</em>`;
+        } else if (score >= 60) {
+            return `<strong>💡 Recomendación:</strong><br><br>${top.razon_social} es una opción <strong>viable</strong> con score ${score}/100.<br><br>Presenta indicadores aceptables, aunque te sugiero revisar en detalle su liquidez y morosidad antes de decidir.<br><br><em>Considera comparar con otras cooperativas del ranking para tomar la mejor decisión.</em>`;
+        } else {
+            return `<strong>💡 Recomendación:</strong><br><br>${top.razon_social} tiene un score de ${score}/100, lo que sugiere <strong>precaución</strong>.<br><br>Te recomiendo analizar en detalle sus indicadores de morosidad y solvencia, o considerar otras cooperativas con mejor puntuación en el ranking.`;
+        }
+    }
+    
+    // 8. Default / No entendí
+    return '🤔 No estoy seguro de entender tu pregunta. Prueba con:<br><br>• "¿Por qué esta cooperativa es la mejor?"<br>• "¿Qué es el ROE?"<br>• "Comparar top 3"<br>• "¿Cuál es el score de [nombre]?"<br><br>¡Estoy aquí para ayudarte! 😊';
+}
 
-    function showAlert(msg, type) {
-        const el = document.getElementById('alert');
-        el.className = `alert alert-${type}`;
-        el.innerText = msg;
-        el.style.display = 'block';
-        setTimeout(() => el.style.display = 'none', 5000);
-    }
-    function hideAlert() { document.getElementById('alert').style.display = 'none'; }
-    function setLoading(isLoading) {
-        const btns = document.querySelectorAll('.btn');
-        btns.forEach(b => b.disabled = isLoading);
-    }
+// ================= INIT =================
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('✅ Sistema inicializado');
+    cargarFechas();
+    
+    document.querySelectorAll('input[id^="cedula"]').forEach(i => {
+        i.addEventListener('input', e => e.target.value = e.target.value.replace(/[^0-9]/g, ''));
+    });
+    
+    // Cerrar chatbot al hacer click fuera
+    document.addEventListener('click', (e) => {
+        const chat = document.getElementById('chatbot');
+        const toggler = document.querySelector('.chatbot-toggler');
+        if (chat.classList.contains('show') && !chat.contains(e.target) && !toggler.contains(e.target)) {
+            chat.classList.remove('show');
+        }
+    });
+});
 </script>
 </body>
 </html>

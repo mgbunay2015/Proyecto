@@ -1,0 +1,10 @@
+﻿INDICADOR,🟢 EXCELENTE,🟡 ACEPTABLE,🔴 ALERTA
+ROE,> 15%,8-15%,< 8%
+ROA,> 7%,3-7%,< 3%
+Morosidad,< 3%,3-8%,> 8%
+Liquidez,> 2.0,1.0-2.0,< 1.0
+Solvencia,> 15%,9-15%,< 9%
+Cobertura,> 120%,70-120%,< 70%
+Eficiencia,< 35%,35-55%,> 55%
+Margen Int.,> 10%,4-10%,< 4%
+Intermediación,75-85%,60-75% o 85-95%,< 60% o > 95%

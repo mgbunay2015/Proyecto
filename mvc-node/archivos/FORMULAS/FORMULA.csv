@@ -1,0 +1,16 @@
+﻿CODIGO_FORMULA,NOMBRE_FORMULA,FORMULA,DESCRIPCION_FORMULA,PESO,VALOR_IDEAL,SEÑAL_ALERTA
+ROE_01,Retorno sobre Patrimonio (ROE),(((5-4)*90003)/90004)/923,Mide la rentabilidad generada sobre el patrimonio de los socios. Indica eficiencia en el uso del capital invertido.,25,> 12% anual,< 8% anual
+ROA_01,Retorno sobre Activos (ROA),(((5-4)*90003)/90004)/921,Eficiencia en el uso de los activos para generar utilidades. Complementa al ROE para visión integral de rentabilidad.,20,> 5% anual,< 3% anual
+MOR_01,Morosidad de Cartera,(1449+1450+1451+1452+1457+1458+1459+1460+1465+1466+1467+1468+1493+1496)/(14-1499+190210),Porcentaje de cartera vencida sobre cartera total. Indicador clave de calidad de activos y gestión de riesgo crediticio.,15,< 5%,> 8%
+LIQ_01,Liquidez Corriente,11/(21-210150),Capacidad de pagar obligaciones a corto plazo con fondos disponibles. Garantiza estabilidad operativa ante retiros masivos.,10,> 1.5,< 1.0
+SOL_01,Solvencia General (Patrimonio Técnico),90009/900010,Patrimonio técnico sobre activos ponderados por riesgo. Mínimo regulatorio: 9%. Garantiza capacidad de absorber pérdidas.,10,> 12%,< 9%
+COB_01,Cobertura de Morosidad,1499/(1449+1450+1451+1452+1457+1458+1459+1460+1465+1466+1467+1468),Provisión sobre cartera vencida. Valores >100% indican adecuada cobertura del riesgo crediticio y prudencia financiera.,5,> 100%,< 70%
+EFI_01,Ratio de Eficiencia Operativa,(45-(4505+4506))/(51+52+53+54-(41+42+43)),Gastos operativos como porcentaje de ingresos operativos. Mide eficiencia en gestión administrativa y costos.,5,< 40%,> 55%
+MAR_01,Margen de Intermediación,(51+5305)-(41),Diferencia entre intereses ganados y pagados. Indicador clave de rentabilidad del negocio principal de intermediación.,3,> 8% del activo,< 4% del activo
+INT_01,Ratio de Intermediación,((14-1499)+190210)/((21-210150)+26+27),Relación entre colocaciones y captaciones. Óptimo entre 70-90% para equilibrio riesgo/rentabilidad y liquidez.,2,70-90%,< 60% o > 95%
+CAP_01,Capital Libre / Activo Total,((3+5-4-1499-16-17-18-19+11-1103)-12)/1,Mide el colchón de capital disponible después de cubrir riesgos operativos y fijos. Valores positivos indican capacidad de crecimiento.,2,> 15%,< 8%
+APA_01,Apalancamiento Financiero,1/(3+5-4),Nivel de dependencia de pasivos. Valores <0.6 indican estructura financiera conservadora y menor riesgo sistémico.,1,< 0.6,> 0.8
+FDP_01,Fondos Disponibles / Depósitos Corto Plazo,11/(2101+2102+210305+210310),Liquidez inmediata para cubrir retiros de corto plazo. Mínimo regulatorio: 14%. Crítico para prevenir crisis de liquidez.,1,> 20%,< 14%
+CPP_01,Cartera Productiva / Cartera Total,(1401+1405+1406+1409+1413+1414+1417+1421+1422)/(14-1499+190210),Porcentaje de cartera que genera ingresos productivos. Valores >70% indican enfoque en misión institucional de desarrollo.,1,> 70%,< 50%
+PAT_01,Patrimonio Técnico / Activos Ponderados,90009/900010,Ratio de solvencia regulatorio según normativa SIB. >12% recomendado para cooperativas en crecimiento sostenible.,1,> 12%,< 9%
+REN_01,Rendimiento sobre Cartera,(5104+5305)/(14-1499+190210),Ingresos por intereses sobre cartera bruta. Mide productividad y pricing adecuado de la cartera de créditos.,1,> 15% anual,< 10% anual
