@@ -3408,7 +3408,7 @@ ORDER BY fbase.SALES_INVOICE_DATE</CommandText>
         - (Sum(IIf(IsNothing(CDec(Fields!VAT_AMOUNT.Value)), 0, CDec(Fields!VAT_AMOUNT.Value)), "BATCH_Detalle"))
       ) * CDec(0.1)
     - Sum(IIf(IsNothing(CDec(Fields!VAT_AMOUNT.Value)), 0, CDec(Fields!VAT_AMOUNT.Value)), "BATCH_Detalle")
-    - Sum(IIf(IsNothing(CDec(Fields!Remaining_Amount.Value)), 0, CDec(Fields!Remaining_Amount.Value)), "movimientosClientesALT1")
+    - Sum(IIf(IsNothing(CDec(Fields!remainingAmount.Value)), 0, CDec(Fields!remainingAmount.Value)), "movimientosClientesALT1")
 )</Value>
                     <Style>
                       <FontSize>9pt</FontSize>
