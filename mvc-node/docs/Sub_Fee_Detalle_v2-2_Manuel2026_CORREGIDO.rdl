@@ -225,7 +225,7 @@ ORDER BY fbase.SALES_INVOICE_DATE</CommandText>
         </Field>
       </Fields>
     </DataSet>
-    <DataSet Name="movimientosClientesALT1">
+    <DataSet Name="BATCH_Detalle_2">
       <Query>
         <DataSourceName>PowerQuery</DataSourceName>
         <CommandText>{"QueryName":"movimientosClientesALT","MashupDocument":"section Section1;\r\nshared movimientosClientesALT = let\r\n  Origen = Dynamics365BusinessCentral.ApiContentsWithOptions(\"PRODUCTION-HVQ\", \"Hospital Vozandes Quito\", null, [UseReadOnlyReplica = null, AcceptLanguage = null, Timeout = #duration(0, 0, 10, 0), ODataMaxPageSize = 500]),\r\n  #\"Navegación 1\" = Origen{[Name = \"Advanced\"]}[Data],\r\n  #\"Navegación 2\" = #\"Navegación 1\"{[Name = \"altiora/localizacion/v2.0\"]}[Data],\r\n  #\"Navegación 3\" = #\"Navegación 2\"{[Name = \"movimientosClientesALT\", Signature = \"table\"]}[Data],\r\n  #\"Filtrado\" = Table.SelectRows(#\"Navegación 3\", each [postingDate] >= #date(2025, 1, 1)),\r\n  #\"Personalizado agregado\" = Table.AddColumn(#\"Filtrado\", \"DocumentNo_Aplicado_Inicial\", each try\r\n    Table.SelectRows(\r\n        movimientosClientesALT1,\r\n        (x) =&gt; x[entryNo] = [custLedgerEntryNo]\r\n    ){0}[documentNo]\r\notherwise \"\")\r\nin\r\n  #\"Personalizado agregado\";\r\n","ConnectionOverrides":[{"Path":"Dynamics365BusinessCentral","Kind":"Dynamics365BusinessCentral","Provider":"DmtsFabric","AuthenticationKind":null,"EnvironmentName":null,"ApiName":null,"ConnectionName":"{\"ClusterId\":\"a1abc3cf-06f3-4161-b408-8a1388debf2f\",\"DatasourceId\":\"31cc04ec-dc88-46bb-8df1-141051414c0e\"}","PrivacyGroup":"None","CredentialDetails":{},"Audience":null,"ConnectionParameters":{}}],"GatewayObjectId":null,"ParameterDefinitions":[]}</CommandText>
@@ -641,6 +641,7 @@ ORDER BY fbase.SALES_INVOICE_DATE</CommandText>
         </Field>
       </Fields>
     </DataSet>
+    
   </DataSets>
   <ReportSections>
     <ReportSection>
@@ -2995,7 +2996,7 @@ ORDER BY fbase.SALES_INVOICE_DATE</CommandText>
         - (Sum(IIf(IsNothing(CDec(Fields!VAT_AMOUNT.Value)), 0, CDec(Fields!VAT_AMOUNT.Value)), "BATCH_Detalle"))
       ) * CDec(0.1)
     - Sum(IIf(IsNothing(CDec(Fields!VAT_AMOUNT.Value)), 0, CDec(Fields!VAT_AMOUNT.Value)), "BATCH_Detalle")
-    - Sum(IIf(IsNothing(CDec(Fields!remainingAmount.Value)), 0, CDec(Fields!remainingAmount.Value)), "movimientosClientesALT1")
+    - Sum(IIf(IsNothing(CDec(Fields!remainingAmount.Value)), 0, CDec(Fields!remainingAmount.Value)), "BATCH_Detalle_2")
 )</Value>
                     <Style>
                       <FontSize>9pt</FontSize>
@@ -3556,7 +3557,7 @@ ORDER BY fbase.SALES_INVOICE_DATE</CommandText>
                 </TablixMember>
               </TablixMembers>
             </TablixRowHierarchy>
-            <DataSetName>detailedCustomerLedgerEntries</DataSetName>
+            <DataSetName>BATCH_Detalle_2</DataSetName>
             <Filters>
               <Filter>
                 <FilterExpression>=Fields!postingDate.Value</FilterExpression>
