@@ -3972,13 +3972,7 @@ ORDER BY fbase.SALES_INVOICE_DATE</CommandText>
             </TablixRowHierarchy>
             <DataSetName>detailedCustomerLedgerEntries</DataSetName>
             <Filters>
-              <Filter>
-                <FilterExpression>=Fields!DocumentNo_Aplicado_Inicial.Value</FilterExpression>
-                <Operator>Equal</Operator>
-                <FilterValues>
-                  <FilterValue>=Parameters!CustomerNo.Value</FilterValue>
-                </FilterValues>
-              </Filter>
+
               <Filter>
                 <FilterExpression>=Fields!postingDate.Value</FilterExpression>
                 <Operator>GreaterThanOrEqual</Operator>
@@ -4055,13 +4049,6 @@ ORDER BY fbase.SALES_INVOICE_DATE</CommandText>
         <cl:HideUpdateNotifications>true</cl:HideUpdateNotifications>
       </cl:ComponentMetadata>
     </ReportParameter>
-<ReportParameter Name="CustomerNo">
-  <DataType>String</DataType>
-  <Prompt>NUMERO CLIENTE:</Prompt>
-  <cl:ComponentMetadata>
-    <cl:HideUpdateNotifications>true</cl:HideUpdateNotifications>
-  </cl:ComponentMetadata>
-</ReportParameter>
   </ReportParameters>
   <ReportParametersLayout>
     <GridLayoutDefinition>
