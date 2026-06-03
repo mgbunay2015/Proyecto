@@ -538,36 +538,127 @@ SELECT
 FROM #FormulaTokensAnadir
 GROUP BY rifIdFecha, CodigoMedidaFinanciera, rifIdInstitucion;
 
--- Evaluar cada fórmula
-DECLARE @Id INT = 1;
-DECLARE @MaxId INT = (SELECT MAX(Id) FROM @Formulas_);
-DECLARE @Formula_ NVARCHAR(MAX), @Resultado FLOAT, @SQL NVARCHAR(MAX);
-DECLARE @rifIdFecha INT, @CodigoMedidaFinanciera INT, @rifIdInstitucion INT;
+-- =============================================
+-- EVALUACIÓN POR LOTES MASIVA
+-- Genera un solo bloque SQL que evalúa N fórmulas
+-- y las inserta en una tabla temporal de golpe.
+-- Reduce llamadas a sp_executesql de N a N/BatchSize
+-- =============================================
 
-WHILE @Id <= ISNULL(@MaxId, 0)
+DECLARE @BatchSize INT = 100;
+DECLARE @TotalFormulas INT = (SELECT MAX(Id) FROM @Formulas_);
+DECLARE @BatchStart INT = 1;
+DECLARE @BatchEnd INT;
+
+DROP TABLE IF EXISTS #BatchResults;
+CREATE TABLE #BatchResults (
+    Id INT PRIMARY KEY,
+    rifIdFecha INT,
+    CodigoMedidaFinanciera INT,
+    rifIdInstitucion INT,
+    Formula NVARCHAR(MAX),
+    Resultado FLOAT
+);
+
+INSERT INTO #BatchResults (Id, rifIdFecha, CodigoMedidaFinanciera, rifIdInstitucion, Formula)
+SELECT Id, rifIdFecha, CodigoMedidaFinanciera, rifIdInstitucion, Formula
+FROM @Formulas_;
+
+WHILE @BatchStart <= ISNULL(@TotalFormulas, 0)
 BEGIN
-    SELECT 
-        @rifIdFecha = rifIdFecha,
-        @CodigoMedidaFinanciera = CodigoMedidaFinanciera,
-        @rifIdInstitucion = rifIdInstitucion,
-        @Formula_ = Formula
-    FROM @Formulas_
-    WHERE Id = @Id;
+    SET @BatchEnd = @BatchStart + @BatchSize - 1;
+    IF @BatchEnd > @TotalFormulas SET @BatchEnd = @TotalFormulas;
 
-    SET @SQL = 'SET @Resultado = ' + @Formula_;
+    -- Construir SQL masivo: un SELECT con UNION ALL que evalúa todas las fórmulas del lote
+    DECLARE @MassSQL NVARCHAR(MAX) = N'';
+    DECLARE @IdLoop INT = @BatchStart;
+    DECLARE @FormulaActual NVARCHAR(MAX);
+    DECLARE @First BIT = 1;
 
-    BEGIN TRY
-        EXEC sp_executesql @SQL, N'@Resultado FLOAT OUTPUT', @Resultado OUTPUT;
-    END TRY
-    BEGIN CATCH
-        SET @Resultado = NULL;
-    END CATCH
+    WHILE @IdLoop <= @BatchEnd
+    BEGIN
+        SELECT @FormulaActual = Formula FROM #BatchResults WHERE Id = @IdLoop;
 
-    INSERT INTO @Resultados VALUES (@rifIdFecha, @CodigoMedidaFinanciera, @rifIdInstitucion, @Formula_, @Resultado);
+        IF @FormulaActual IS NOT NULL AND LEN(@FormulaActual) > 0 
+           AND LEN(@FormulaActual) < 4000
+        BEGIN
+            IF @First = 0 SET @MassSQL += N' UNION ALL ';
+            
+            SET @MassSQL += N'SELECT ' + CAST(@IdLoop AS NVARCHAR(10)) 
+                + N' AS Id, CAST((' + @FormulaActual + N') AS FLOAT) AS Resultado';
+            SET @First = 0;
+        END
 
-    SET @Resultado = NULL;
-    SET @Id += 1;
+        SET @IdLoop += 1;
+    END
+
+    -- Ejecutar todo el lote en una sola llamada
+    IF LEN(@MassSQL) > 0
+    BEGIN
+        DECLARE @WrapSQL NVARCHAR(MAX) = N'
+            DECLARE @TempRes TABLE (Id INT, Resultado FLOAT);
+            BEGIN TRY
+                INSERT INTO @TempRes ' + @MassSQL + N';
+                UPDATE b SET b.Resultado = t.Resultado
+                FROM #BatchResults b INNER JOIN @TempRes t ON b.Id = t.Id;
+            END TRY
+            BEGIN CATCH
+                -- Si el lote falla, evaluar una por una (fallback)
+                DECLARE @i INT = ' + CAST(@BatchStart AS NVARCHAR(10)) + N';
+                DECLARE @e INT = ' + CAST(@BatchEnd AS NVARCHAR(10)) + N';
+                WHILE @i <= @e
+                BEGIN
+                    DECLARE @f NVARCHAR(MAX), @r FLOAT;
+                    SELECT @f = Formula FROM #BatchResults WHERE Id = @i;
+                    IF @f IS NOT NULL AND LEN(@f) > 0
+                    BEGIN
+                        BEGIN TRY
+                            DECLARE @s NVARCHAR(MAX) = N''SET @r = '' + @f;
+                            EXEC sp_executesql @s, N''@r FLOAT OUTPUT'', @r = @r OUTPUT;
+                            UPDATE #BatchResults SET Resultado = @r WHERE Id = @i;
+                        END TRY
+                        BEGIN CATCH
+                            UPDATE #BatchResults SET Resultado = NULL WHERE Id = @i;
+                        END CATCH
+                    END
+                    SET @i += 1;
+                END
+            END CATCH';
+
+        BEGIN TRY
+            EXEC sp_executesql @WrapSQL;
+        END TRY
+        BEGIN CATCH
+            -- Fallback final: evaluar una por una
+            DECLARE @fb INT = @BatchStart;
+            WHILE @fb <= @BatchEnd
+            BEGIN
+                DECLARE @fbF NVARCHAR(MAX), @fbR FLOAT;
+                SELECT @fbF = Formula FROM #BatchResults WHERE Id = @fb;
+                IF @fbF IS NOT NULL AND LEN(@fbF) > 0
+                BEGIN
+                    SET @fbR = NULL;
+                    BEGIN TRY
+                        DECLARE @fbSQL NVARCHAR(MAX) = N'SET @R = ' + @fbF;
+                        EXEC sp_executesql @fbSQL, N'@R FLOAT OUTPUT', @R = @fbR OUTPUT;
+                    END TRY
+                    BEGIN CATCH
+                        SET @fbR = NULL;
+                    END CATCH
+                    UPDATE #BatchResults SET Resultado = @fbR WHERE Id = @fb;
+                END
+                SET @fb += 1;
+            END
+        END CATCH
+    END
+
+    SET @BatchStart = @BatchEnd + 1;
 END
+
+-- Pasar a @Resultados
+INSERT INTO @Resultados (rifIdFecha, CodigoMedidaFinanciera, rifIdInstitucion, Formula, Resultado)
+SELECT rifIdFecha, CodigoMedidaFinanciera, rifIdInstitucion, Formula, Resultado
+FROM #BatchResults;
 
 -- =============================================
 -- 14. RESULTADO FINAL (optimizado - un solo SELECT)
